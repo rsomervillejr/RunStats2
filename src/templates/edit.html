@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2 id="form-title">Add New Run</h2>
+        <form id="run-form">
+            <div class="mb-3">
+                <label for="date" class="form-label">Date *</label>
+                <input type="date" class="form-control" id="date" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="total_distance" class="form-label">Total Distance (miles) *</label>
+                <input type="number" class="form-control" id="total_distance" step="0.01" min="0.01" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Run Type *</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="run_type" id="workout" value="workout" checked>
+                    <label class="form-check-label" for="workout">
+                        Workout
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="run_type" id="race" value="race">
+                    <label class="form-check-label" for="race">
+                        Race
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3 race-fields" style="display: none;">
+                <label for="race_name" class="form-label">Race Name *</label>
+                <input type="text" class="form-control" id="race_name">
+            </div>
+
+            <div class="mb-3 race-fields" style="display: none;">
+                <label for="race_distance" class="form-label">Race Distance (miles) *</label>
+                <input type="number" class="form-control" id="race_distance" step="0.1" min="0.1">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Environment *</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="environment" id="outdoor" value="outdoor" checked>
+                    <label class="form-check-label" for="outdoor">
+                        Outdoor
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="environment" id="treadmill" value="treadmill">
+                    <label class="form-check-label" for="treadmill">
+                        Treadmill
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="notes" class="form-label">Notes</label>
+                <textarea class="form-control" id="notes" rows="3"></textarea>
+            </div>
+
+            <div class="split-form">
+                <h4>Mile Splits *</h4>
+                <p class="text-muted">Add at least one split. The total distance of all splits must equal the run distance.</p>
+                <div id="splits-container">
+                    <div class="split-row">
+                        <span class="badge bg-primary">Split 1</span>
+                        <input type="number" class="form-control" placeholder="Distance (miles)" step="0.01" min="0.01" required>
+                        <input type="number" class="form-control" placeholder="Time (seconds)" min="1" required>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeSplit(this)">Remove</button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addSplit()">Add Split</button>
+                <div id="distance-warning" class="alert alert-warning mt-2" style="display: none;">
+                    Split distances don't match total run distance!
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" id="submit-btn">Save Run</button>
+                <a href="/" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Help</h5>
+                <ul class="list-unstyled">
+                    <li><strong>Date:</strong> When you ran</li>
+                    <li><strong>Distance:</strong> Total miles run</li>
+                    <li><strong>Type:</strong> Race or workout</li>
+                    <li><strong>Environment:</strong> Outdoor or treadmill</li>
+                    <li><strong>Splits:</strong> Time for each mile segment</li>
+                </ul>
+                <p class="text-muted small">* Required fields</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let splitCount = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Highlight current page
+    document.getElementById('edit-link').classList.add('active');
+
+    // Handle run type changes
+    document.querySelectorAll('input[name="run_type"]').forEach(radio => {
+        radio.addEventListener('change', toggleRaceFields);
+    });
+
+    // Handle form submission
+    document.getElementById('run-form').addEventListener('submit', handleSubmit);
+
+    // Check URL for run_id parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const runId = urlParams.get('run_id');
+    if (runId) {
+        loadRunForEditing(runId);
+    }
+});
+
+function toggleRaceFields() {
+    const raceSelected = document.getElementById('race').checked;
+    const raceFields = document.querySelectorAll('.race-fields');
+    raceFields.forEach(field => {
+        field.style.display = raceSelected ? 'block' : 'none';
+        field.querySelector('input').required = raceSelected;
+    });
+}
+
+function addSplit() {
+    splitCount++;
+    const container = document.getElementById('splits-container');
+    const splitRow = document.createElement('div');
+    splitRow.className = 'split-row';
+    splitRow.innerHTML = `
+        <span class="badge bg-primary">Split ${splitCount}</span>
+        <input type="number" class="form-control" placeholder="Distance (miles)" step="0.01" min="0.01" required>
+        <input type="number" class="form-control" placeholder="Time (seconds)" min="1" required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeSplit(this)">Remove</button>
+    `;
+    container.appendChild(splitRow);
+    updateSplitIndices();
+}
+
+function removeSplit(button) {
+    if (document.querySelectorAll('.split-row').length > 1) {
+        button.closest('.split-row').remove();
+        updateSplitIndices();
+    }
+}
+
+function updateSplitIndices() {
+    const rows = document.querySelectorAll('.split-row');
+    rows.forEach((row, index) => {
+        row.querySelector('.badge').textContent = `Split ${index + 1}`;
+    });
+    splitCount = rows.length;
+}
+
+function validateDistances() {
+    const totalDistance = parseFloat(document.getElementById('total_distance').value) || 0;
+    const splitInputs = document.querySelectorAll('.split-row input[placeholder*="Distance"]');
+    let splitTotal = 0;
+
+    splitInputs.forEach(input => {
+        splitTotal += parseFloat(input.value) || 0;
+    });
+
+    const warning = document.getElementById('distance-warning');
+    if (Math.abs(splitTotal - totalDistance) > 0.001) {
+        warning.style.display = 'block';
+        warning.textContent = `Split distances total ${splitTotal.toFixed(2)} miles, but run distance is ${totalDistance.toFixed(2)} miles!`;
+        return false;
+    } else {
+        warning.style.display = 'none';
+        return true;
+    }
+}
+
+async function handleSubmit(event) {
+    event.preventDefault();
+
+    if (!validateDistances()) {
+        alert('Please fix the split distances before saving.');
+        return;
+    }
+
+    const formData = {
+        date: document.getElementById('date').value,
+        total_distance_miles: parseFloat(document.getElementById('total_distance').value),
+        run_type: document.querySelector('input[name="run_type"]:checked').value,
+        environment: document.querySelector('input[name="environment"]:checked').value,
+        race_name: document.getElementById('race_name').value || null,
+        race_distance_miles: parseFloat(document.getElementById('race_distance').value) || null,
+        notes: document.getElementById('notes').value || null,
+        splits: []
+    };
+
+    // Collect splits
+    const splitRows = document.querySelectorAll('.split-row');
+    splitRows.forEach((row, index) => {
+        const inputs = row.querySelectorAll('input');
+        formData.splits.push({
+            split_index: index + 1,
+            distance_miles: parseFloat(inputs[0].value),
+            time_seconds: parseInt(inputs[1].value)
+        });
+    });
+
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const runId = urlParams.get('run_id');
+
+        let response;
+        if (runId) {
+            response = await fetch(`/api/runs/${runId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+        } else {
+            response = await fetch('/api/runs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+        }
+
+        if (response.ok) {
+            alert(runId ? 'Run updated successfully!' : 'Run saved successfully!');
+            window.location.href = '/';
+        } else {
+            const error = await response.json();
+            alert('Error saving run: ' + (error.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving run. Please try again.');
+    }
+}
+
+async function loadRunForEditing(runId) {
+    try {
+        const response = await fetch(`/api/runs/${runId}`);
+        const run = await response.json();
+
+        // Populate form
+        document.getElementById('form-title').textContent = 'Edit Run';
+        document.getElementById('date').value = run.date;
+        document.getElementById('total_distance').value = run.total_distance_miles;
+        document.querySelector(`input[name="run_type"][value="${run.run_type}"]`).checked = true;
+        document.querySelector(`input[name="environment"][value="${run.environment}"]`).checked = true;
+
+        if (run.run_type === 'race') {
+            document.getElementById('race_name').value = run.race_name || '';
+            document.getElementById('race_distance').value = run.race_distance_miles || '';
+            toggleRaceFields();
+        }
+
+        document.getElementById('notes').value = run.notes || '';
+
+        // Clear existing splits and add loaded ones
+        document.getElementById('splits-container').innerHTML = '';
+        splitCount = 0;
+
+        run.splits.forEach(split => {
+            addSplit();
+            const rows = document.querySelectorAll('.split-row');
+            const lastRow = rows[rows.length - 1];
+            const inputs = lastRow.querySelectorAll('input');
+            inputs[0].value = split.distance_miles;
+            inputs[1].value = split.time_seconds;
+        });
+
+    } catch (error) {
+        console.error('Error loading run for editing:', error);
+        alert('Error loading run for editing. Please try again.');
+    }
+}
+
+// Add distance validation on input changes
+document.getElementById('total_distance').addEventListener('input', validateDistances);
+document.addEventListener('input', function(e) {
+    if (e.target.placeholder && e.target.placeholder.includes('Distance')) {
+        validateDistances();
+    }
+});
+</script>
+{% endblock %}

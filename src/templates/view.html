@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>Run History</h2>
+        <div id="runs-list">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div id="run-detail" style="display: none;">
+            <h3>Run Details</h3>
+            <div id="run-info"></div>
+            <div class="pace-chart">
+                <canvas id="paceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadRuns();
+
+    // Highlight current page
+    document.getElementById('view-link').classList.add('active');
+});
+
+async function loadRuns() {
+    try {
+        const response = await fetch('/api/runs');
+        const runs = await response.json();
+
+        const runsList = document.getElementById('runs-list');
+        if (runs.length === 0) {
+            runsList.innerHTML = '<p class="text-muted">No runs recorded yet. <a href="/edit">Add your first run</a>.</p>';
+            return;
+        }
+
+        const html = runs.map(run => `
+            <div class="card mb-3 run-card" data-run-id="${run.id}">
+                <div class="card-body">
+                    <h5 class="card-title">${run.date}</h5>
+                    <p class="card-text">
+                        ${run.total_distance_miles} miles
+                        ${run.run_type === 'race' ? ` - ${run.race_name} (${run.race_distance_miles}mi race)` : ' - Workout'}
+                        - ${run.environment}
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            ${run.split_count} split${run.split_count !== 1 ? 's' : ''} |
+                            Avg pace: ${formatPace(run.summary_pace_seconds_per_mile)}
+                        </small>
+                    </p>
+                    <button class="btn btn-primary btn-sm" onclick="viewRun(${run.id})">View Details</button>
+                    <button class="btn btn-secondary btn-sm" onclick="editRun(${run.id})">Edit</button>
+                </div>
+            </div>
+        `).join('');
+
+        runsList.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading runs:', error);
+        document.getElementById('runs-list').innerHTML =
+            '<div class="alert alert-danger">Error loading runs. Please try again.</div>';
+    }
+}
+
+async function viewRun(runId) {
+    try {
+        const response = await fetch(`/api/runs/${runId}`);
+        const run = await response.json();
+
+        // Update run info
+        const runInfo = document.getElementById('run-info');
+        runInfo.innerHTML = `
+            <p><strong>Date:</strong> ${run.date}</p>
+            <p><strong>Distance:</strong> ${run.total_distance_miles} miles</p>
+            <p><strong>Type:</strong> ${run.run_type === 'race' ? `${run.race_name} (${run.race_distance_miles}mi race)` : 'Workout'}</p>
+            <p><strong>Environment:</strong> ${run.environment}</p>
+            ${run.notes ? `<p><strong>Notes:</strong> ${run.notes}</p>` : ''}
+            <h4>Splits</h4>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Mile</th>
+                            <th>Distance</th>
+                            <th>Time</th>
+                            <th>Pace</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${run.splits.map(split => `
+                            <tr>
+                                <td>${split.split_index}</td>
+                                <td>${split.distance_miles}mi</td>
+                                <td>${formatTime(split.time_seconds)}</td>
+                                <td>${formatPace(split.pace_seconds_per_mile)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        // Update chart
+        updatePaceChart(run.splits);
+
+        // Show detail panel
+        document.getElementById('run-detail').style.display = 'block';
+
+        // Scroll to top of detail
+        document.getElementById('run-detail').scrollIntoView({ behavior: 'smooth' });
+    } catch (error) {
+        console.error('Error loading run details:', error);
+        alert('Error loading run details. Please try again.');
+    }
+}
+
+function updatePaceChart(splits) {
+    const ctx = document.getElementById('paceChart').getContext('2d');
+
+    // Destroy existing chart if it exists
+    if (window.paceChart) {
+        window.paceChart.destroy();
+    }
+
+    const labels = splits.map(split => `Mile ${split.split_index}`);
+    const paces = splits.map(split => split.pace_seconds_per_mile);
+
+    window.paceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Pace (min/mile)',
+                data: paces,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return formatPace(value);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Pace by Mile Split'
+                }
+            }
+        }
+    });
+}
+
+function editRun(runId) {
+    window.location.href = `/edit?run_id=${runId}`;
+}
+
+function formatPace(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.round(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+</script>
+{% endblock %}

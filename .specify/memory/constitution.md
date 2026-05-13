@@ -1,50 +1,46 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Version change: template → 1.0.0
+List of modified principles: All principles added (RESTful API Design, Data Validation and Integrity, Security Best Practices, Comprehensive Testing, Error Handling and Logging, Database Management, Scalability and Performance)
+Added sections: Technical Requirements, Development Workflow
+Removed sections: None
+Templates requiring updates: None
+Follow-up TODOs: None
+-->
+# RunStats2 Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. RESTful API Design
+All API endpoints must adhere to REST principles: utilize appropriate HTTP methods (GET for retrieval, POST for creation, PUT for updates, DELETE for removal), employ resource-based URL structures, return standard HTTP status codes, and maintain stateless communication between client and server.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Data Validation and Integrity
+All user inputs and data must be rigorously validated using schema validation libraries (e.g., Marshmallow or Pydantic). Database schemas must enforce integrity constraints. No invalid or malformed data shall be persisted to the database.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Security Best Practices (NON-NEGOTIABLE)
+Implement robust authentication and authorization mechanisms. Enforce HTTPS for all communications, sanitize all inputs to prevent injection attacks, include CSRF protection, and handle passwords securely. Conduct regular security audits and vulnerability assessments.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Comprehensive Testing
+Adopt Test-Driven Development (TDD) for all features. Maintain unit tests for individual functions, integration tests for API endpoints, and end-to-end tests covering full CRUD workflows. Achieve and maintain test coverage above 80%.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Error Handling and Logging
+Implement centralized error handling with appropriate HTTP response codes and user-friendly messages. Utilize structured logging for debugging, monitoring, and auditing purposes. Ensure error messages do not expose sensitive system information.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### VI. Database Management
+Use SQLAlchemy as the ORM for all database interactions. Implement database migrations for schema changes. Optimize queries, apply proper indexing, and ensure efficient data access patterns.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### VII. Scalability and Performance
+Design the application for horizontal scalability. Optimize database queries and implement caching strategies where beneficial. Monitor and measure performance metrics to identify bottlenecks.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Technical Requirements
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+The application shall be built using the Flask web framework. Database interactions must use SQLAlchemy ORM. Authentication shall utilize JWT tokens. Testing framework shall be pytest. Code must be compatible with Python 3.8+. Deployment must support containerization with Docker.
+
+## Development Workflow
+
+All development must follow TDD principles. Code changes require peer review before merging. Continuous Integration (CI) must run all tests on every pull request. Deployment to production requires automated testing and manual approval.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other project guidelines and practices. Amendments to the constitution require documentation of the proposed change, review by the development team, and approval by a majority vote. All pull requests and code reviews must verify compliance with these principles. Complexity in implementation must be justified and documented.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-04-15
