@@ -55,14 +55,14 @@ class TestRunCreationIntegration:
         run = RunEntry.query.get(data['id'])
         assert run is not None
         assert run.date == date(2026, 5, 7)
-        assert run.total_distance_miles == 3.1
+        assert float(run.total_distance_miles) == 3.1
         assert len(run.splits) == 3
 
         # Verify splits were saved
         splits = MileSplit.query.filter_by(run_id=run.id).order_by(MileSplit.split_index).all()
         assert len(splits) == 3
         assert splits[0].split_index == 1
-        assert splits[0].distance_miles == 1.0
+        assert float(splits[0].distance_miles) == 1.0
         assert splits[0].time_seconds == 360
 
     def test_create_race_run_integration(self, client):
@@ -93,7 +93,7 @@ class TestRunCreationIntegration:
         # Verify in database
         run = RunEntry.query.get(data['id'])
         assert run.race_name == 'City 10K'
-        assert run.race_distance_miles == 6.2
+        assert float(run.race_distance_miles) == 6.2
 
     def test_create_run_validation_integration(self, client):
         """Test validation errors in run creation."""

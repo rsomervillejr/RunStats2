@@ -1,5 +1,5 @@
 from src.models import db, RunEntry, MileSplit
-from src.api.schemas import RunEntrySchema, RunEntryResponseSchema
+from src.schemas import RunEntrySchema, RunEntryResponseSchema
 from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 import logging
@@ -12,12 +12,10 @@ class RunService:
     @staticmethod
     def create_run(run_data):
         """Create a new run with splits."""
-        try:
-            # Validate input data
-            schema = RunEntrySchema()
-            validated_data = schema.load(run_data)
+        schema = RunEntrySchema()
+        validated_data = schema.load(run_data)
 
-            # Create run entry
+        try:
             run = RunEntry(
                 date=validated_data['date'],
                 total_distance_miles=validated_data['total_distance_miles'],
@@ -28,7 +26,6 @@ class RunService:
                 notes=validated_data.get('notes')
             )
 
-            # Create splits
             for split_data in validated_data['splits']:
                 split = MileSplit(
                     split_index=split_data['split_index'],
@@ -37,20 +34,22 @@ class RunService:
                 )
                 run.splits.append(split)
 
-            # Save to database
             db.session.add(run)
             db.session.commit()
+            return run
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Unexpected error creating run: {e}")
+            raise
 
     @staticmethod
     def update_run(run_id, run_data):
         """Update an existing run with splits."""
-        try:
-            # Get existing run
-            run = RunEntry.query.get_or_404(run_id)
+        schema = RunEntrySchema()
+        validated_data = schema.load(run_data)
 
-            # Validate input data
-            schema = RunEntrySchema()
-            validated_data = schema.load(run_data)
+        try:
+            run = RunEntry.query.get_or_404(run_id)
 
             # Update run entry
             run.date = validated_data['date']
@@ -64,8 +63,9 @@ class RunService:
             # Replace splits - delete existing and create new ones
             for split in run.splits:
                 db.session.delete(split)
-
             run.splits = []
+            db.session.flush()
+
             for split_data in validated_data['splits']:
                 split = MileSplit(
                     split_index=split_data['split_index'],
@@ -80,9 +80,6 @@ class RunService:
             logger.info(f"Updated run {run.id} with {len(run.splits)} splits")
             return run
 
-        except ValidationError as e:
-            logger.error(f"Validation error updating run {run_id}: {e.messages}")
-            raise
         except IntegrityError as e:
             db.session.rollback()
             logger.error(f"Database integrity error updating run {run_id}: {e}")
@@ -110,12 +107,12 @@ class RunService:
 
             result.append({
                 'id': run.id,
-                'date': run.date,
-                'total_distance_miles': run.total_distance_miles,
+                'date': run.date.isoformat(),
+                'total_distance_miles': float(run.total_distance_miles),
                 'run_type': run.run_type,
                 'environment': run.environment,
                 'race_name': run.race_name,
-                'race_distance_miles': run.race_distance_miles,
+                'race_distance_miles': float(run.race_distance_miles) if run.race_distance_miles is not None else None,
                 'summary_pace_seconds_per_mile': round(summary_pace, 3),
                 'split_count': len(run.splits)
             })
@@ -133,21 +130,21 @@ class RunService:
             pace = split.time_seconds / float(split.distance_miles) if split.distance_miles > 0 else 0
             splits_data.append({
                 'split_index': split.split_index,
-                'distance_miles': split.distance_miles,
+                'distance_miles': float(split.distance_miles),
                 'time_seconds': split.time_seconds,
                 'pace_seconds_per_mile': round(pace, 3)
             })
 
         return {
             'id': run.id,
-            'date': run.date,
-            'total_distance_miles': run.total_distance_miles,
+            'date': run.date.isoformat(),
+            'total_distance_miles': float(run.total_distance_miles),
             'run_type': run.run_type,
             'environment': run.environment,
             'race_name': run.race_name,
-            'race_distance_miles': run.race_distance_miles,
+            'race_distance_miles': float(run.race_distance_miles) if run.race_distance_miles is not None else None,
             'notes': run.notes,
-            'created_at': run.created_at,
-            'updated_at': run.updated_at,
+            'created_at': run.created_at.isoformat() if run.created_at else None,
+            'updated_at': run.updated_at.isoformat() if run.updated_at else None,
             'splits': splits_data
         }

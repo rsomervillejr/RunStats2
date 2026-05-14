@@ -37,6 +37,16 @@ def create_run():
         logger.error(f"Error creating run: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@api_bp.route('/runs/<int:run_id>', methods=['GET'])
+def get_run(run_id):
+    """Get a single run by ID."""
+    try:
+        result = RunService.get_run_by_id(run_id)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error getting run {run_id}: {e}")
+        return jsonify({'error': 'Run not found'}), 404
+
 @api_bp.route('/runs/<int:run_id>', methods=['PUT'])
 def update_run(run_id):
     """Update an existing run entry."""

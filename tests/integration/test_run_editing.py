@@ -110,7 +110,7 @@ class TestRunEditingIntegration:
         run = RunEntry.query.get(run_id)
         assert run.run_type == 'race'
         assert run.race_name == 'Spring 5K'
-        assert run.race_distance_miles == 3.1
+        assert float(run.race_distance_miles) == 3.1
 
     def test_edit_run_change_splits_integration(self, client):
         """Test editing a run to change split structure."""

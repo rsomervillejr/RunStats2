@@ -23,40 +23,20 @@ class TestRunEntryModel:
         assert run.race_distance_miles == 6.2
 
     def test_run_entry_requires_date(self):
-        """Test RunEntry requires date."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            run = RunEntry(
-                total_distance_miles=6.2,
-                run_type='race',
-                environment='outdoor'
-            )
+        """Test RunEntry date column is non-nullable."""
+        assert RunEntry.__table__.c.date.nullable is False
 
     def test_run_entry_requires_total_distance(self):
-        """Test RunEntry requires total_distance_miles."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            run = RunEntry(
-                date=date(2026, 5, 7),
-                run_type='race',
-                environment='outdoor'
-            )
+        """Test RunEntry total_distance_miles column is non-nullable."""
+        assert RunEntry.__table__.c.total_distance_miles.nullable is False
 
     def test_run_entry_requires_run_type(self):
-        """Test RunEntry requires run_type."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            run = RunEntry(
-                date=date(2026, 5, 7),
-                total_distance_miles=6.2,
-                environment='outdoor'
-            )
+        """Test RunEntry run_type column is non-nullable."""
+        assert RunEntry.__table__.c.run_type.nullable is False
 
     def test_run_entry_requires_environment(self):
-        """Test RunEntry requires environment."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            run = RunEntry(
-                date=date(2026, 5, 7),
-                total_distance_miles=6.2,
-                run_type='race'
-            )
+        """Test RunEntry environment column is non-nullable."""
+        assert RunEntry.__table__.c.environment.nullable is False
 
     def test_run_entry_race_fields_optional_for_workout(self):
         """Test race fields are optional for workout runs."""
@@ -87,37 +67,17 @@ class TestMileSplitModel:
         assert split.time_seconds == 360
 
     def test_mile_split_requires_run_id(self):
-        """Test MileSplit requires run_id."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            split = MileSplit(
-                split_index=1,
-                distance_miles=1.0,
-                time_seconds=360
-            )
+        """Test MileSplit run_id column is non-nullable."""
+        assert MileSplit.__table__.c.run_id.nullable is False
 
     def test_mile_split_requires_split_index(self):
-        """Test MileSplit requires split_index."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            split = MileSplit(
-                run_id=1,
-                distance_miles=1.0,
-                time_seconds=360
-            )
+        """Test MileSplit split_index column is non-nullable."""
+        assert MileSplit.__table__.c.split_index.nullable is False
 
     def test_mile_split_requires_distance(self):
-        """Test MileSplit requires distance_miles."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            split = MileSplit(
-                run_id=1,
-                split_index=1,
-                time_seconds=360
-            )
+        """Test MileSplit distance_miles column is non-nullable."""
+        assert MileSplit.__table__.c.distance_miles.nullable is False
 
     def test_mile_split_requires_time(self):
-        """Test MileSplit requires time_seconds."""
-        with pytest.raises(Exception):  # Should fail due to nullable=False
-            split = MileSplit(
-                run_id=1,
-                split_index=1,
-                distance_miles=1.0
-            )
+        """Test MileSplit time_seconds column is non-nullable."""
+        assert MileSplit.__table__.c.time_seconds.nullable is False

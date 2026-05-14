@@ -84,7 +84,9 @@ class TestRunService:
             "run_type": "workout",
             "environment": "treadmill",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360}
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.1, "time_seconds": 400}
             ]
         }
 
@@ -150,7 +152,7 @@ class TestRunService:
         result = RunService.get_run_by_id(1)
 
         assert result['id'] == 1
-        assert result['date'] == date(2026, 5, 7)
+        assert result['date'] == '2026-05-07'
         assert len(result['splits']) == 1
         assert result['splits'][0]['pace_seconds_per_mile'] == 360.0
 
