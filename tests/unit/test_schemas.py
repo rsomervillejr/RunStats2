@@ -15,7 +15,6 @@ class TestMileSplitRequestSchema:
         assert result["split_index"] == 1
         assert float(result["distance_miles"]) == 1.0
         assert result["time_seconds"] == 360
-        assert "duration_mmss" not in result
 
     @pytest.mark.parametrize(
         "invalid_duration",

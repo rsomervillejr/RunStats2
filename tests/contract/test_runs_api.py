@@ -94,7 +94,15 @@ class TestRunsAPI:
 
         response = client.post('/api/runs', json=payload)
         assert response.status_code == 400
-        assert 'duration_mmss' in response.get_json().get('details', {})
+
+        details = response.get_json().get('details', {})
+        assert details == {
+            'splits': {
+                '0': {
+                    'duration_mmss': ['duration_mmss must be mm:ss with minutes and seconds 00-59']
+                }
+            }
+        }
 
     def test_post_runs_allows_race_without_metadata(self, client):
         """Test POST /api/runs allows race runs without optional race metadata."""

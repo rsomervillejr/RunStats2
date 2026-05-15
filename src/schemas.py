@@ -42,6 +42,11 @@ class MileSplitRequestSchema(BaseSchema):
 
         return data
 
+    @post_load
+    def remove_duration_mmss(self, data, **kwargs):
+        data.pop('duration_mmss', None)
+        return data
+
 class MileSplitSchema(BaseSchema):
     """Schema for mile split data."""
     split_index = fields.Int(required=True, validate=Range(min=1))

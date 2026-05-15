@@ -15,4 +15,4 @@
 - [X] T011 [P] [US2] Add contract tests verifying invalid `mm:ss` input returns HTTP 400.
 
 - [X] T012 [US3] Update `specs/004-split-duration-format/spec.md` and contracts/ notes to document strict `mm:ss` validation and `time_seconds` persistence.
-- [ ] T013 [US3] Run the full targeted test suite for this feature and confirm no regressions.
+- [X] T013 [US3] Run the full targeted test suite for this feature and confirm no regressions.
