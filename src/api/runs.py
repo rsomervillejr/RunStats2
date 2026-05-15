@@ -6,6 +6,29 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+def _validate_api_split_durations(data):
+    if not isinstance(data, dict):
+        return
+
+    splits = data.get('splits')
+    if splits is None:
+        return
+
+    for split in splits:
+        if not isinstance(split, dict):
+            continue
+
+        if 'time_seconds' in split:
+            raise ValidationError({
+                'splits': ['API requests must not include time_seconds; use duration_mmss instead.']
+            })
+
+        if 'duration_mmss' not in split:
+            raise ValidationError({
+                'splits': ['Each split must include duration_mmss in mm:ss format.']
+            })
+
 @api_bp.route('/runs', methods=['GET'])
 def get_runs():
     """Get all runs ordered by date descending."""
@@ -24,6 +47,7 @@ def create_run():
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
+        _validate_api_split_durations(data)
         run = RunService.create_run(data)
 
         # Return the created run with splits
@@ -55,6 +79,7 @@ def update_run(run_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
 
+        _validate_api_split_durations(data)
         run = RunService.update_run(run_id, data)
 
         # Return the updated run with splits

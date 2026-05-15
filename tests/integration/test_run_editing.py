@@ -33,7 +33,7 @@ class TestRunEditingIntegration:
             "run_type": "workout",
             "environment": "treadmill",
             "notes": "Original workout",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         create_response = client.post('/api/runs', json=payload)
@@ -47,7 +47,7 @@ class TestRunEditingIntegration:
             "run_type": "workout",
             "environment": "outdoor",
             "notes": "Updated workout - moved outside",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1150}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "19:10"}]
         }
 
         response = client.put(f'/api/runs/{run_id}', json=update_payload)
@@ -78,7 +78,7 @@ class TestRunEditingIntegration:
             "total_distance_miles": 3.1,
             "run_type": "workout",
             "environment": "outdoor",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         create_response = client.post('/api/runs', json=payload)
@@ -94,7 +94,7 @@ class TestRunEditingIntegration:
             "race_name": "Spring 5K",
             "race_distance_miles": 3.1,
             "notes": "Converted to race entry",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1100}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "18:20"}]
         }
 
         response = client.put(f'/api/runs/{run_id}', json=update_payload)
@@ -119,7 +119,7 @@ class TestRunEditingIntegration:
             "total_distance_miles": 3.1,
             "run_type": "workout",
             "environment": "outdoor",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         create_response = client.post('/api/runs', json=payload)
@@ -134,7 +134,7 @@ class TestRunEditingIntegration:
             "race_name": "",
             "race_distance_miles": 0,
             "notes": None,
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         response = client.put(f'/api/runs/{run_id}', json=update_payload)
@@ -158,7 +158,7 @@ class TestRunEditingIntegration:
             "total_distance_miles": 4.0,
             "run_type": "workout",
             "environment": "outdoor",
-            "splits": [{"split_index": 1, "distance_miles": 4.0, "time_seconds": 1600}]
+            "splits": [{"split_index": 1, "distance_miles": 4.0, "duration_mmss": "26:40"}]
         }
 
         create_response = client.post('/api/runs', json=payload)
@@ -172,10 +172,10 @@ class TestRunEditingIntegration:
             "run_type": "workout",
             "environment": "outdoor",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 380},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 400},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 390},
-                {"split_index": 4, "distance_miles": 1.0, "time_seconds": 430}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:20"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:40"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "06:30"},
+                {"split_index": 4, "distance_miles": 1.0, "duration_mmss": "07:10"}
             ]
         }
 
@@ -193,6 +193,31 @@ class TestRunEditingIntegration:
         assert splits[3].split_index == 4
         assert splits[3].time_seconds == 430
 
+    def test_edit_run_rejects_invalid_duration_format_integration(self, client):
+        """Test run updates reject invalid duration_mmss values."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 3.1,
+            "run_type": "workout",
+            "environment": "outdoor",
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
+        }
+
+        create_response = client.post('/api/runs', json=payload)
+        assert create_response.status_code == 201
+        run_id = create_response.get_json()['id']
+
+        update_payload = {
+            "date": "2026-05-08",
+            "total_distance_miles": 3.1,
+            "run_type": "workout",
+            "environment": "outdoor",
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "60:00"}]
+        }
+
+        response = client.put(f'/api/runs/{run_id}', json=update_payload)
+        assert response.status_code == 400
+
     def test_edit_nonexistent_run_returns_404(self, client):
         """Test editing a non-existent run returns 404."""
         update_payload = {
@@ -200,7 +225,7 @@ class TestRunEditingIntegration:
             "total_distance_miles": 3.1,
             "run_type": "workout",
             "environment": "outdoor",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         response = client.put('/api/runs/999', json=update_payload)
@@ -214,7 +239,7 @@ class TestRunEditingIntegration:
             "total_distance_miles": 3.1,
             "run_type": "workout",
             "environment": "outdoor",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         create_response = client.post('/api/runs', json=payload)
@@ -229,7 +254,7 @@ class TestRunEditingIntegration:
             "race_name": None,
             "race_distance_miles": None,
             "notes": None,
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         response = client.put(f'/api/runs/{run_id}', json=update_payload)

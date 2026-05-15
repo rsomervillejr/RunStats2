@@ -19,11 +19,11 @@ class TestRunService:
             "total_distance_miles": 3.1,
             "run_type": "workout",
             "environment": "treadmill",
-            "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.1, "time_seconds": 400}
-            ]
+                "splits": [
+                    {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                    {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                    {"split_index": 3, "distance_miles": 1.1, "duration_mmss": "06:40"}
+                ]
         }
 
         # Mock the created run
@@ -62,9 +62,9 @@ class TestRunService:
             "run_type": "workout",
             "environment": "treadmill",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 0.5, "time_seconds": 200}  # Sum = 2.5, not 3.1
+                    {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                    {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                    {"split_index": 3, "distance_miles": 0.5, "duration_mmss": "03:20"}  # Sum = 2.5, not 3.1
             ]
         }
 
@@ -86,10 +86,10 @@ class TestRunService:
             "race_distance_miles": None,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                    {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                    {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                    {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                    {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -123,10 +123,10 @@ class TestRunService:
             "race_distance_miles": 0,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                    {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                    {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                    {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                    {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -166,10 +166,10 @@ class TestRunService:
             "race_distance_miles": 0,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                    {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                    {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                    {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                    {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -198,9 +198,9 @@ class TestRunService:
         update_data = {
             "date": "2026-05-07",
             "total_distance_miles": 6.2,
-            "run_type": "race",
-            "environment": "outdoor",
-            "race_name": None,
+                    {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                    {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                    {"split_index": 3, "distance_miles": 1.1, "duration_mmss": "06:40"}
             "race_distance_miles": None,
             "notes": None,
             "splits": [
@@ -235,7 +235,7 @@ class TestRunService:
             "environment": "treadmill",
             "splits": [
                 {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+            assert result[0]['summary_pace_seconds_per_mile'] == 360.0  # This line remains unchanged
                 {"split_index": 3, "distance_miles": 1.1, "time_seconds": 400}
             ]
         }
@@ -267,7 +267,7 @@ class TestRunService:
 
         mock_run_class.query.order_by.return_value.all.return_value = [mock_run]
 
-        result = RunService.get_runs()
+            assert result['splits'][0]['pace_seconds_per_mile'] == 360.0  # This line remains unchanged
 
         assert len(result) == 1
         assert result[0]['id'] == 1
@@ -323,7 +323,7 @@ class TestRunService:
             "run_type": "workout",
             "environment": "outdoor",
             "notes": "Updated run",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1150}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "19:10"}]
         }
 
         with patch('src.services.run_service.RunEntry') as mock_run_class:
