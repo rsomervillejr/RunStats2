@@ -128,15 +128,14 @@ async function viewRun(runId) {
 function updatePaceChart(splits) {
     const ctx = document.getElementById('paceChart').getContext('2d');
 
-    // Destroy existing chart if it exists
-    if (window.paceChart) {
-        window.paceChart.destroy();
+    if (window.paceChartInstance) {
+        window.paceChartInstance.destroy();
     }
 
     const labels = splits.map(split => `Mile ${split.split_index}`);
     const paces = splits.map(split => split.pace_seconds_per_mile);
 
-    window.paceChart = new Chart(ctx, {
+    window.paceChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
