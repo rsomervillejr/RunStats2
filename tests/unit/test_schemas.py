@@ -19,7 +19,7 @@ class TestMileSplitRequestSchema:
 
     @pytest.mark.parametrize(
         "invalid_duration",
-        ["6:00", "60:00", "00:60", "abc", "", "  "]
+        ["6:00", "5:3", "5:03", "05:3", "60:00", "00:60", "abc", "", "  "]
     )
     def test_invalid_duration_mmss_formats_raise_validation_error(self, invalid_duration):
         schema = MileSplitRequestSchema()

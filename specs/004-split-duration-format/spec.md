@@ -10,6 +10,7 @@
 ### Session 2026-05-15
 Q1: Decision: The system will accept only strict `mm:ss` format for split duration input — alternate formats are not allowed.
 Q2: Decision: The server MUST reject non-conforming formats and return HTTP 400 with a validation error; it will not attempt to coerce ambiguous inputs.
+Q3: Decision: Single-digit minutes or seconds without zero padding are rejected; only two-digit `mm:ss` values are accepted.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -24,7 +25,7 @@ A runner entering split times must provide them in `mm:ss` format so the UI enfo
 **Acceptance Scenarios**:
 
 1. **Given** a user adds a split and enters `05:30`, **when** the run is saved, **then** the database stores `330` seconds for that split.
-2. **Given** a user enters `5:3` or `5:03`, **when** the system validates input, **then** the input is rejected with HTTP 400 and a clear validation message (strict `mm:ss` required).
+2. **Given** a user enters `5:3`, `5:03`, or `05:3`, **when** the system validates input, **then** the input is rejected with HTTP 400 and a clear validation message (zero-padded `mm:ss` required).
 3. **Given** a user enters `60:00` or `00:60`, **when** validation runs, **then** input is rejected because minutes and seconds must be within 0–59.
 
 ---
@@ -60,7 +61,7 @@ The server requires `duration_mmss` in requests and performs the conversion to i
 ### Edge Cases
 
 - Handling leading/trailing whitespace in input.
-- Handling single-digit minutes or seconds (`5:3` should be interpreted as `05:03` if coercion allowed).
+- Handling single-digit minutes or seconds (`5:3`, `5:03`, or `05:3` should be rejected; zero-padding is required).
 - Accessibility: screen readers should announce the expected `mm:ss` format.
 - Timeouts or extremely long durations: reject minutes or seconds > 59.
 
@@ -69,7 +70,7 @@ The server requires `duration_mmss` in requests and performs the conversion to i
 ### Functional Requirements
 
 - **FR-001**: The split duration input MUST enforce `mm:ss` time format on the run entry screen.
-- **FR-002**: Minutes and seconds MUST each be in the range `0`–`59` inclusive.
+- **FR-002**: Minutes and seconds MUST each be two digits in the range `00`–`59` inclusive.
 - **FR-003**: The UI MUST show inline validation messages for malformed or out-of-range input and prevent submission until corrected.
 - **FR-004**: The system MUST convert `mm:ss` into total seconds (integer) before persisting to the database; alternatively, the server MUST perform equivalent conversion if client does not.
  **FR-005**: The server-side API MUST validate the split duration format and converted seconds (must be positive and within reasonable bounds); on validation failure the API MUST return HTTP 400.

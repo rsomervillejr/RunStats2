@@ -19,7 +19,7 @@ class MileSplitRequestSchema(BaseSchema):
         load_only=True,
         validate=Regexp(r'^[0-5][0-9]:[0-5][0-9]$', error='duration_mmss must be mm:ss with minutes and seconds 00-59')
     )
-    time_seconds = fields.Int(load_only=True, required=True, validate=Range(min=1))
+    time_seconds = fields.Int(load_only=True, required=False, validate=Range(min=1))
 
     @pre_load
     def convert_duration_mmss(self, data, **kwargs):
