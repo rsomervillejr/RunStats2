@@ -112,6 +112,44 @@ class TestRunEditingIntegration:
         assert run.race_name == 'Spring 5K'
         assert float(run.race_distance_miles) == 3.1
 
+    def test_edit_run_normalizes_blank_race_name_and_zero_distance_integration(self, client):
+        """Test editing a run normalizes blank race_name and zero race_distance_miles."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 3.1,
+            "run_type": "workout",
+            "environment": "outdoor",
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+        }
+
+        create_response = client.post('/api/runs', json=payload)
+        assert create_response.status_code == 201
+        run_id = create_response.get_json()['id']
+
+        update_payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 3.1,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": "",
+            "race_distance_miles": 0,
+            "notes": None,
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+        }
+
+        response = client.put(f'/api/runs/{run_id}', json=update_payload)
+        assert response.status_code == 200
+
+        data = response.get_json()
+        assert data['run_type'] == 'race'
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None
+
+        run = RunEntry.query.get(run_id)
+        assert run.race_name is None
+        assert run.race_distance_miles is None
+
     def test_edit_run_change_splits_integration(self, client):
         """Test editing a run to change split structure."""
         # Create initial run with one split
@@ -183,14 +221,22 @@ class TestRunEditingIntegration:
         run_id = create_response.get_json()['id']
 
         # Try to update with invalid data
-        invalid_payload = {
+        update_payload = {
             "date": "2026-05-07",
             "total_distance_miles": 3.1,
             "run_type": "race",
             "environment": "outdoor",
-            # Missing race_name and race_distance_miles
+            "race_name": None,
+            "race_distance_miles": None,
+            "notes": None,
             "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
         }
 
-        response = client.put(f'/api/runs/{run_id}', json=invalid_payload)
-        assert response.status_code == 400
+        response = client.put(f'/api/runs/{run_id}', json=update_payload)
+        assert response.status_code == 200
+
+        data = response.get_json()
+        assert data['run_type'] == 'race'
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None

@@ -64,19 +64,58 @@ class TestRunsAPI:
         response = client.post('/api/runs', json=payload)
         assert response.status_code == 400
 
-    def test_post_runs_validates_race_metadata(self, client):
-        """Test POST /api/runs requires race metadata when run_type is race."""
+    def test_post_runs_allows_race_without_metadata(self, client):
+        """Test POST /api/runs allows race runs without optional race metadata."""
         payload = {
             "date": "2026-05-07",
             "total_distance_miles": 6.2,
             "run_type": "race",
             "environment": "outdoor",
-            # Missing race_name and race_distance_miles
-            "splits": [{"split_index": 1, "distance_miles": 1.0, "time_seconds": 360}]
+            "race_name": None,
+            "race_distance_miles": None,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
         }
 
         response = client.post('/api/runs', json=payload)
-        assert response.status_code == 400
+        assert response.status_code == 201
+
+        data = response.get_json()
+        assert data['run_type'] == 'race'
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None
+
+    def test_post_runs_normalizes_blank_race_name_and_zero_distance(self, client):
+        """Test POST /api/runs normalizes blank race_name and zero race_distance_miles to null."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": "",
+            "race_distance_miles": 0,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        response = client.post('/api/runs', json=payload)
+        assert response.status_code == 201
+
+        data = response.get_json()
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None
 
     def test_post_runs_validates_split_distances_sum(self, client):
         """Test POST /api/runs validates that split distances sum to total distance."""
@@ -135,6 +174,36 @@ class TestRunsAPI:
         assert data['environment'] == 'treadmill'
         assert len(data['splits']) == 3
         assert 'pace_seconds_per_mile' in data['splits'][0]
+
+    def test_get_run_by_id_returns_null_optional_fields(self, client):
+        """Test GET /api/runs/{id} returns null optional fields when not set."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": None,
+            "race_distance_miles": None,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        create_response = client.post('/api/runs', json=payload)
+        assert create_response.status_code == 201
+        run_id = create_response.get_json()['id']
+
+        response = client.get(f'/api/runs/{run_id}')
+        assert response.status_code == 200
+
+        data = response.get_json()
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None
 
     def test_get_runs_by_invalid_id_returns_404(self, client):
         """Test GET /api/runs/{invalid_id} returns 404."""

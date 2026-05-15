@@ -95,6 +95,37 @@ class TestRunCreationIntegration:
         assert run.race_name == 'City 10K'
         assert float(run.race_distance_miles) == 6.2
 
+    def test_create_run_normalizes_blank_race_name_and_zero_distance_integration(self, client):
+        """Test creating a run normalizes blank race_name and zero race_distance_miles."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": " ",
+            "race_distance_miles": 0,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        response = client.post('/api/runs', json=payload)
+        assert response.status_code == 201
+
+        data = response.get_json()
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None
+
+        run = RunEntry.query.get(data['id'])
+        assert run is not None
+        assert run.race_name is None
+        assert run.race_distance_miles is None
+
     def test_create_run_validation_integration(self, client):
         """Test validation errors in run creation."""
         # Test missing required fields
@@ -108,10 +139,22 @@ class TestRunCreationIntegration:
             "total_distance_miles": 6.2,
             "run_type": "race",
             "environment": "outdoor",
-            "splits": [{"split_index": 1, "distance_miles": 1.0, "time_seconds": 360}]
+            "race_name": None,
+            "race_distance_miles": None,
+            "notes": None,
+            "splits": [{"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                       {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                       {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                       {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}]
         }
         response = client.post('/api/runs', json=payload)
-        assert response.status_code == 400
+        assert response.status_code == 201
+
+        data = response.get_json()
+        assert data['run_type'] == 'race'
+        assert data['race_name'] is None
+        assert data['race_distance_miles'] is None
+        assert data['notes'] is None
 
         # Test split distance mismatch
         payload = {

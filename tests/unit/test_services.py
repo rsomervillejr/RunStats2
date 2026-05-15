@@ -72,6 +72,156 @@ class TestRunService:
             RunService.create_run(invalid_data)
 
     @patch('src.services.run_service.db')
+    def test_create_run_allows_race_run_without_metadata(self, mock_db):
+        """Test run creation accepts race runs with null optional race metadata."""
+        mock_session = MagicMock()
+        mock_db.session = mock_session
+
+        run_data = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": None,
+            "race_distance_miles": None,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        mock_run = MagicMock()
+        mock_run.id = 1
+        mock_run.splits = []
+
+        with patch('src.services.run_service.RunEntry') as mock_run_class:
+            with patch('src.services.run_service.MileSplit') as mock_split_class:
+                mock_run_class.return_value = mock_run
+                mock_split_class.return_value = MagicMock()
+
+                result = RunService.create_run(run_data)
+
+                assert result == mock_run
+                mock_session.add.assert_called_once_with(mock_run)
+                mock_session.commit.assert_called_once()
+
+    @patch('src.services.run_service.db')
+    def test_create_run_normalizes_blank_race_name_and_zero_distance(self, mock_db):
+        """Test blank race_name and zero race_distance_miles normalize to null."""
+        mock_session = MagicMock()
+        mock_db.session = mock_session
+
+        run_data = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": "",
+            "race_distance_miles": 0,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        mock_run = MagicMock()
+        mock_run.id = 1
+        mock_run.splits = []
+
+        with patch('src.services.run_service.RunEntry') as mock_run_class:
+            with patch('src.services.run_service.MileSplit') as mock_split_class:
+                mock_run_class.return_value = mock_run
+                mock_split_class.return_value = MagicMock()
+
+                result = RunService.create_run(run_data)
+
+                assert result == mock_run
+                mock_session.add.assert_called_once_with(mock_run)
+                mock_session.commit.assert_called_once()
+                assert mock_run_class.call_args.kwargs['race_name'] is None
+                assert mock_run_class.call_args.kwargs['race_distance_miles'] is None
+
+    @patch('src.services.run_service.db')
+    def test_update_run_normalizes_blank_race_name_and_zero_distance(self, mock_db):
+        """Test update run normalizes blank race_name and zero race_distance_miles."""
+        mock_session = MagicMock()
+        mock_db.session = mock_session
+
+        mock_run = MagicMock()
+        mock_run.id = 1
+        mock_run.splits = [MagicMock()]
+
+        update_data = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": "",
+            "race_distance_miles": 0,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        with patch('src.services.run_service.RunEntry') as mock_run_class:
+            mock_run_class.query.get_or_404.return_value = mock_run
+            with patch('src.services.run_service.MileSplit') as mock_split_class:
+                mock_split_class.return_value = MagicMock()
+
+                result = RunService.update_run(1, update_data)
+
+                assert result == mock_run
+                assert mock_run.race_name is None
+                assert mock_run.race_distance_miles is None
+                mock_session.commit.assert_called_once()
+
+    @patch('src.services.run_service.db')
+    def test_create_run_database_error(self, mock_db):
+        """Test run update accepts race runs with null optional race metadata."""
+        mock_session = MagicMock()
+        mock_db.session = mock_session
+
+        mock_run = MagicMock()
+        mock_run.id = 1
+        mock_run.splits = [MagicMock()]
+
+        update_data = {
+            "date": "2026-05-07",
+            "total_distance_miles": 6.2,
+            "run_type": "race",
+            "environment": "outdoor",
+            "race_name": None,
+            "race_distance_miles": None,
+            "notes": None,
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
+                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
+                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
+                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+            ]
+        }
+
+        with patch('src.services.run_service.RunEntry') as mock_run_class:
+            with patch('src.services.run_service.MileSplit') as mock_split_class:
+                mock_run_class.query.get_or_404.return_value = mock_run
+                mock_split_class.return_value = MagicMock()
+
+                result = RunService.update_run(1, update_data)
+
+                assert result == mock_run
+                mock_session.commit.assert_called_once()
+
+    @patch('src.services.run_service.db')
     def test_create_run_database_error(self, mock_db):
         """Test run creation with database error."""
         mock_session = MagicMock()

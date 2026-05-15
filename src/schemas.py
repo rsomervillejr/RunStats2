@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validates, validates_schema, ValidationError, post_load
+from marshmallow import Schema, fields, validates, validates_schema, ValidationError, post_load, pre_load
 from marshmallow.validate import OneOf, Range
 import datetime
 
@@ -22,18 +22,36 @@ class RunEntrySchema(BaseSchema):
     total_distance_miles = fields.Decimal(required=True, places=3, validate=Range(min=0.001))
     run_type = fields.Str(required=True, validate=OneOf(VALID_RUN_TYPES))
     environment = fields.Str(required=True, validate=OneOf(VALID_ENVIRONMENTS))
-    race_name = fields.Str()
-    race_distance_miles = fields.Decimal(places=1)
-    notes = fields.Str()
+    race_name = fields.Str(allow_none=True)
+    race_distance_miles = fields.Decimal(places=1, allow_none=True, validate=Range(min=0.001))
+    notes = fields.Str(allow_none=True)
     splits = fields.List(fields.Nested(MileSplitSchema), required=True, validate=lambda x: len(x) > 0)
+
+    @pre_load
+    def normalize_nullable_race_fields(self, data, **kwargs):
+        if not isinstance(data, dict):
+            return data
+
+        if 'race_name' in data and data.get('race_name') is not None:
+            race_name = str(data.get('race_name')).strip()
+            if race_name == '':
+                data['race_name'] = None
+
+        if 'race_distance_miles' in data and data.get('race_distance_miles') is not None:
+            try:
+                distance_value = float(data.get('race_distance_miles'))
+                if distance_value == 0:
+                    data['race_distance_miles'] = None
+            except (TypeError, ValueError):
+                pass
+
+        return data
 
     @validates_schema
     def validate_race_and_split_distances(self, data, **kwargs):
-        if data.get('run_type') == 'race':
-            if not data.get('race_name'):
-                raise ValidationError('race_name is required when run_type is race', field_name='race_name')
-            if not data.get('race_distance_miles'):
-                raise ValidationError('race_distance_miles is required when run_type is race', field_name='race_distance_miles')
+        race_name = data.get('race_name')
+        if race_name is not None and not str(race_name).strip():
+            raise ValidationError('race_name cannot be blank', field_name='race_name')
 
         if 'splits' in data and 'total_distance_miles' in data:
             total_split_distance = sum(float(split['distance_miles']) for split in data['splits'])
@@ -52,9 +70,9 @@ class RunEntryResponseSchema(BaseSchema):
     total_distance_miles = fields.Decimal(places=3)
     run_type = fields.Str()
     environment = fields.Str()
-    race_name = fields.Str()
-    race_distance_miles = fields.Decimal(places=1)
-    notes = fields.Str()
+    race_name = fields.Str(allow_none=True)
+    race_distance_miles = fields.Decimal(places=1, allow_none=True)
+    notes = fields.Str(allow_none=True)
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
     splits = fields.List(fields.Nested(MileSplitSchema()))
@@ -66,7 +84,7 @@ class RunListResponseSchema(BaseSchema):
     total_distance_miles = fields.Decimal(places=3)
     run_type = fields.Str()
     environment = fields.Str()
-    race_name = fields.Str()
-    race_distance_miles = fields.Decimal(places=1)
+    race_name = fields.Str(allow_none=True)
+    race_distance_miles = fields.Decimal(places=1, allow_none=True)
     summary_pace_seconds_per_mile = fields.Decimal(places=3)
     split_count = fields.Int()
