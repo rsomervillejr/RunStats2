@@ -34,10 +34,10 @@ class TestRunsAPI:
             "race_distance_miles": 6.2,
             "notes": "Strong finish",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -58,11 +58,43 @@ class TestRunsAPI:
         """Test POST /api/runs validates required fields."""
         # Missing required fields
         payload = {
-            "splits": [{"split_index": 1, "distance_miles": 1.0, "time_seconds": 360}]
+            "splits": [{"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"}]
         }
 
         response = client.post('/api/runs', json=payload)
         assert response.status_code == 400
+
+    def test_post_runs_rejects_time_seconds_input(self, client):
+        """Test POST /api/runs rejects time_seconds in split payloads."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 3.1,
+            "run_type": "workout",
+            "environment": "outdoor",
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360}
+            ]
+        }
+
+        response = client.post('/api/runs', json=payload)
+        assert response.status_code == 400
+        assert 'time_seconds' in response.get_json().get('details', {}).get('splits', [])[0]
+
+    def test_post_runs_rejects_invalid_duration_format(self, client):
+        """Test POST /api/runs rejects invalid duration_mmss formats."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 3.1,
+            "run_type": "workout",
+            "environment": "outdoor",
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "6:00"}
+            ]
+        }
+
+        response = client.post('/api/runs', json=payload)
+        assert response.status_code == 400
+        assert 'duration_mmss' in response.get_json().get('details', {})
 
     def test_post_runs_allows_race_without_metadata(self, client):
         """Test POST /api/runs allows race runs without optional race metadata."""
@@ -75,10 +107,10 @@ class TestRunsAPI:
             "race_distance_miles": None,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -102,10 +134,10 @@ class TestRunsAPI:
             "race_distance_miles": 0,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -125,10 +157,10 @@ class TestRunsAPI:
             "run_type": "workout",
             "environment": "outdoor",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 2.0, "time_seconds": 720}  # Sum = 5.0, not 6.2
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 2.0, "duration_mmss": "12:00"}  # Sum = 5.0, not 6.2
             ]
         }
 
@@ -152,9 +184,9 @@ class TestRunsAPI:
             "run_type": "workout",
             "environment": "treadmill",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.1, "time_seconds": 400}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.1, "duration_mmss": "06:40"}
             ]
         }
 
@@ -186,10 +218,10 @@ class TestRunsAPI:
             "race_distance_miles": None,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -218,7 +250,7 @@ class TestRunsAPI:
             "total_distance_miles": 3.1,
             "run_type": "workout",
             "environment": "treadmill",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1200}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "20:00"}]
         }
 
         create_response = client.post('/api/runs', json=payload)
@@ -232,7 +264,7 @@ class TestRunsAPI:
             "run_type": "workout",
             "environment": "outdoor",
             "notes": "Updated run",
-            "splits": [{"split_index": 1, "distance_miles": 3.1, "time_seconds": 1150}]
+            "splits": [{"split_index": 1, "distance_miles": 3.1, "duration_mmss": "19:10"}]
         }
 
         response = client.put(f'/api/runs/{run_id}', json=update_payload)

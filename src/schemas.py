@@ -1,5 +1,5 @@
 from marshmallow import Schema, fields, validates, validates_schema, ValidationError, post_load, pre_load
-from marshmallow.validate import OneOf, Range
+from marshmallow.validate import OneOf, Range, Regexp
 import datetime
 
 class BaseSchema(Schema):
@@ -9,6 +9,38 @@ class BaseSchema(Schema):
 # Validation constants
 VALID_RUN_TYPES = ['race', 'workout']
 VALID_ENVIRONMENTS = ['treadmill', 'outdoor']
+
+class MileSplitRequestSchema(BaseSchema):
+    """Schema for mile split request data."""
+    split_index = fields.Int(required=True, validate=Range(min=1))
+    distance_miles = fields.Decimal(required=True, places=3, validate=Range(min=0.001))
+    duration_mmss = fields.Str(
+        required=True,
+        load_only=True,
+        validate=Regexp(r'^[0-5][0-9]:[0-5][0-9]$', error='duration_mmss must be mm:ss with minutes and seconds 00-59')
+    )
+    time_seconds = fields.Int(load_only=True, required=True, validate=Range(min=1))
+
+    @pre_load
+    def convert_duration_mmss(self, data, **kwargs):
+        if not isinstance(data, dict):
+            return data
+
+        duration = data.get('duration_mmss')
+        if duration is not None:
+            try:
+                duration = str(duration).strip()
+                minutes, seconds = duration.split(':')
+                total_seconds = int(minutes) * 60 + int(seconds)
+            except (ValueError, AttributeError):
+                return data
+
+            if total_seconds == 0:
+                raise ValidationError('duration_mmss must be greater than 00:00', field_name='duration_mmss')
+
+            data['time_seconds'] = total_seconds
+
+        return data
 
 class MileSplitSchema(BaseSchema):
     """Schema for mile split data."""
@@ -25,7 +57,7 @@ class RunEntrySchema(BaseSchema):
     race_name = fields.Str(allow_none=True)
     race_distance_miles = fields.Decimal(places=1, allow_none=True, validate=Range(min=0.001))
     notes = fields.Str(allow_none=True)
-    splits = fields.List(fields.Nested(MileSplitSchema), required=True, validate=lambda x: len(x) > 0)
+    splits = fields.List(fields.Nested(MileSplitRequestSchema), required=True, validate=lambda x: len(x) > 0)
 
     @pre_load
     def normalize_nullable_race_fields(self, data, **kwargs):

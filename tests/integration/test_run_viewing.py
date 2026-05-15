@@ -33,14 +33,14 @@ class TestRunViewingIntegration:
                 "total_distance_miles": 3.0,
                 "run_type": "workout",
                 "environment": "treadmill",
-                "splits": [{"split_index": 1, "distance_miles": 3.0, "time_seconds": 1200}]
+                "splits": [{"split_index": 1, "distance_miles": 3.0, "duration_mmss": "20:00"}]
             },
             {
                 "date": "2026-05-07",
                 "total_distance_miles": 5.0,
                 "run_type": "workout",
                 "environment": "outdoor",
-                "splits": [{"split_index": 1, "distance_miles": 5.0, "time_seconds": 1800}]
+                "splits": [{"split_index": 1, "distance_miles": 5.0, "duration_mmss": "30:00"}]
             },
             {
                 "date": "2026-05-06",
@@ -49,7 +49,7 @@ class TestRunViewingIntegration:
                 "environment": "outdoor",
                 "race_name": "5K Fun Run",
                 "race_distance_miles": 3.1,
-                "splits": [{"split_index": 1, "distance_miles": 4.0, "time_seconds": 1500}]
+                "splits": [{"split_index": 1, "distance_miles": 4.0, "duration_mmss": "25:00"}]
             }
         ]
 
@@ -93,9 +93,9 @@ class TestRunViewingIntegration:
             "environment": "treadmill",
             "notes": "Test workout with pace",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},  # 6:00/mi
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 390},  # 6:30/mi
-                {"split_index": 3, "distance_miles": 1.1, "time_seconds": 440}   # ~6:40/mi
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},  # 6:00/mi
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:30"},  # 6:30/mi
+                {"split_index": 3, "distance_miles": 1.1, "duration_mmss": "07:20"}   # ~6:40/mi
             ]
         }
 

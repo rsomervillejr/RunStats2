@@ -33,9 +33,9 @@ class TestRunCreationIntegration:
             "environment": "treadmill",
             "notes": "Test workout",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.1, "time_seconds": 400}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.1, "duration_mmss": "06:40"}
             ]
         }
 
@@ -75,10 +75,10 @@ class TestRunCreationIntegration:
             "race_name": "City 10K",
             "race_distance_miles": 6.2,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -106,10 +106,10 @@ class TestRunCreationIntegration:
             "race_distance_miles": 0,
             "notes": None,
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}
             ]
         }
 
@@ -125,6 +125,21 @@ class TestRunCreationIntegration:
         assert run is not None
         assert run.race_name is None
         assert run.race_distance_miles is None
+
+    def test_create_run_rejects_invalid_duration_format_integration(self, client):
+        """Test run creation rejects invalid duration_mmss values."""
+        payload = {
+            "date": "2026-05-07",
+            "total_distance_miles": 3.1,
+            "run_type": "workout",
+            "environment": "treadmill",
+            "splits": [
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "6:00"}
+            ]
+        }
+
+        response = client.post('/api/runs', json=payload)
+        assert response.status_code == 400
 
     def test_create_run_validation_integration(self, client):
         """Test validation errors in run creation."""
@@ -142,10 +157,10 @@ class TestRunCreationIntegration:
             "race_name": None,
             "race_distance_miles": None,
             "notes": None,
-            "splits": [{"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                       {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                       {"split_index": 3, "distance_miles": 1.0, "time_seconds": 355},
-                       {"split_index": 4, "distance_miles": 3.2, "time_seconds": 1140}]
+            "splits": [{"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                       {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                       {"split_index": 3, "distance_miles": 1.0, "duration_mmss": "05:55"},
+                       {"split_index": 4, "distance_miles": 3.2, "duration_mmss": "19:00"}]
         }
         response = client.post('/api/runs', json=payload)
         assert response.status_code == 201
@@ -163,9 +178,9 @@ class TestRunCreationIntegration:
             "run_type": "workout",
             "environment": "treadmill",
             "splits": [
-                {"split_index": 1, "distance_miles": 1.0, "time_seconds": 360},
-                {"split_index": 2, "distance_miles": 1.0, "time_seconds": 365},
-                {"split_index": 3, "distance_miles": 0.5, "time_seconds": 200}
+                {"split_index": 1, "distance_miles": 1.0, "duration_mmss": "06:00"},
+                {"split_index": 2, "distance_miles": 1.0, "duration_mmss": "06:05"},
+                {"split_index": 3, "distance_miles": 0.5, "duration_mmss": "03:20"}
             ]
         }
         response = client.post('/api/runs', json=payload)
