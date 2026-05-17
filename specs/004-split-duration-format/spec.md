@@ -74,6 +74,7 @@ The server requires `duration_mmss` in requests and performs the conversion to i
 - **FR-003**: The UI MUST show inline validation messages for malformed or out-of-range input and prevent submission until corrected.
 - **FR-004**: The system MUST convert `mm:ss` into total seconds (integer) before persisting to the database; alternatively, the server MUST perform equivalent conversion if client does not.
  **FR-005**: The server-side API MUST validate the split duration format and converted seconds (must be positive and within reasonable bounds); on validation failure the API MUST return HTTP 400.
+- **FR-005**: The server-side API MUST validate the split duration format and converted seconds. Converted seconds must be non-negative and less than or equal to 3599 (i.e., a maximum of `59:59`). On validation failure the API MUST return HTTP 400.
 - **FR-006**: The API contract MUST document that split durations are stored as integer seconds and accepted input formats.
 
 ### Key Entities

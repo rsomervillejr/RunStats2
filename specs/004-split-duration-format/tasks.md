@@ -1,8 +1,8 @@
 # Tasks: Split duration time format (mm:ss)
 
-- [ ] T001 Confirm `specs/004-split-duration-format/spec.md` and `plan.md` accurately reflect the strict `mm:ss` requirement and `time_seconds` persistence.
-- [ ] T002 Create `specs/004-split-duration-format/tasks.md` for implementation tracking.
-- [ ] T003 Confirm no `quickstart.md` doc reference exists outside the feature docs and that API contract docs are up to date.
+- [X] T001 Confirm `specs/004-split-duration-format/spec.md` and `plan.md` accurately reflect the strict `mm:ss` requirement and `time_seconds` persistence.
+- [X] T002 Create `specs/004-split-duration-format/tasks.md` for implementation tracking.
+- [X] T003 Confirm no `quickstart.md` doc reference exists outside the feature docs and that API contract docs are up to date.
 
 - [X] T004 [US1] Update request validation to accept and validate strict `mm:ss` split duration input.
 - [X] T005 [US1] Add conversion logic from validated `mm:ss` into `MileSplit.time_seconds`.
@@ -16,3 +16,6 @@
 
 - [X] T012 [US3] Update `specs/004-split-duration-format/spec.md` and contracts/ notes to document strict `mm:ss` validation and `time_seconds` persistence.
 - [X] T013 [US3] Run the full targeted test suite for this feature and confirm no regressions.
+ - [ ] T014 [US2] Implement client-side inline validation for `duration_mmss` (strict `mm:ss`), block submission on invalid input, and provide accessible inline guidance/error messages.
+ - [ ] T015 [US2] Add UI integration tests verifying inline validation behavior and accessibility (e.g., focus handling, screen reader text).
+ - [ ] T016 [US3] Update API contract and consumer docs to specify max allowed duration seconds = 3599 (59:59) and include examples of valid/invalid payloads.
