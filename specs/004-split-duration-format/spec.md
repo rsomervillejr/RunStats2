@@ -2,7 +2,7 @@
 
 **Feature Branch**: `004-split-duration-format`  
 **Created**: May 15, 2026  
-**Status**: Draft  
+**Status**: Implemented (server-side); client-side validation and API examples pending  
 **Input**: User description: "The run entry screen should require the end user to enter mile split duration with minutes and seconds in the time format of \"mm:ss\". The minute and second values should be limited to a maximum of 59, with appropriate data entry validations to guide the user. The final mile split duration entered by the user can be converted into total seconds to retain consistency with the database structure."
 
 ## Clarifications
@@ -94,3 +94,9 @@ The server requires `duration_mmss` in requests and performs the conversion to i
 - Client UI is capable of parsing and validating `mm:ss` inputs and displaying inline errors.
 - Server persists split durations as integer seconds in the existing split model.
 - The API accepts `mm:ss` formatted duration strings only; integer-second submissions are considered non-conforming and will be rejected.
+
+## Examples
+
+- **Valid**: "05:30" → 330 seconds; "00:00" → 0 seconds.
+- **Invalid**: "5:3", "60:00", "00:60", providing `time_seconds` directly in request payload.
+- **Max allowed duration**: 59:59 (3599 seconds).
